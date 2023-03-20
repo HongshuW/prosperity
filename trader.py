@@ -18,12 +18,10 @@ class Trader:
             # Sort all the available sell orders by their price,
             # and select only the sell order with the lowest price
             best_ask = min(order_depth.sell_orders.keys())
-            # best_ask_volume = order_depth.sell_orders[best_ask]
         else:
             return
         if len(order_depth.buy_orders) > 0:
             best_bid = max(order_depth.buy_orders.keys())
-            # best_bid_volume = order_depth.buy_orders[best_bid]
         else:
             return
         volume = SINGLE_TRADE_SIZE
@@ -32,6 +30,24 @@ class Trader:
             orders.append(Order(product, best_ask - 1, -volume))
             print("BUY", volume, "x", best_bid + 1)
             print("SELL", volume, "x", best_ask - 1)
+        return orders
+
+    def long_short_position(self, product: str, order_depth: OrderDepth) -> list[Order]:
+        orders: list[Order] = []
+        if len(order_depth.sell_orders) > 0:
+            best_ask = min(order_depth.sell_orders.keys())
+            best_ask_volume = order_depth.sell_orders[best_ask]
+            if best_ask < PRICES[product]:
+                volume = min(best_ask_volume, SINGLE_TRADE_SIZE)
+                orders.append(Order(product, best_ask, volume))
+                print("BUY", volume, "x", best_ask)
+        if len(order_depth.buy_orders) > 0:
+            best_bid = max(order_depth.buy_orders.keys())
+            best_bid_volume = order_depth.buy_orders[best_bid]
+            if best_bid > PRICES[product]:
+                volume = min(best_bid_volume, SINGLE_TRADE_SIZE)
+                orders.append(Order(product, best_bid, -volume))
+                print("SELL", volume, "x", best_bid)
         return orders
 
     def run(self, state: TradingState) -> Dict[str, List[Order]]:
@@ -52,6 +68,7 @@ class Trader:
             # if abs(state.position[product]) + SINGLE_TRADE_SIZE <= LIMITS[product]:
             order_depth: OrderDepth = state.order_depths[product]
             orders = self.market_making(product, order_depth)
+            orders += self.long_short_position(product, order_depth)
             result[product] = orders
 
         return result
