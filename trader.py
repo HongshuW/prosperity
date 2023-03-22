@@ -3,8 +3,8 @@ from datamodel import OrderDepth, TradingState, Order
 
 
 SINGLE_TRADE_SIZE = 5
-LIMITS = {'PEARLS': 20, 'BANANAS': 20}
-PRICES = {'PEARLS': 10000, 'BANANAS': 5000}
+LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300}
+PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
 
 class Trader:
     def __init__(self):
