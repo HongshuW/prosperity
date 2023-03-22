@@ -6,6 +6,7 @@ SINGLE_TRADE_SIZE = 5
 LIMITS = {'PEARLS': 20, 'BANANAS': 20}
 PRICES = {'PEARLS': 10000, 'BANANAS': 5000}
 
+"""65,555,560"""
 class Trader:
     def __init__(self):
         self.profit = 0
@@ -111,16 +112,20 @@ class Trader:
         print("\nposition: ", position)
 
         for product in order_depths.keys():
-            if position.keys().__contains__(product):
-                if abs(position[product]) + SINGLE_TRADE_SIZE <= LIMITS[product]:
-                    order_depth: OrderDepth = order_depths[product]
-                    orders = self.market_making(product, order_depth)
-                    orders += self.long_short_position(product, order_depth)
-                    result[product] = orders
-            else:
-                order_depth: OrderDepth = order_depths[product]
-                orders = self.market_making(product, order_depth)
-                orders += self.long_short_position(product, order_depth)
-                result[product] = orders
+            # if position.keys().__contains__(product):
+            #     if abs(position[product]) + SINGLE_TRADE_SIZE <= LIMITS[product]:
+            #         order_depth: OrderDepth = order_depths[product]
+            #         orders = self.market_making(product, order_depth)
+            #         orders += self.long_short_position(product, order_depth)
+            #         result[product] = orders
+            # else:
+            #     order_depth: OrderDepth = order_depths[product]
+            #     orders = self.market_making(product, order_depth)
+            #     orders += self.long_short_position(product, order_depth)
+            #     result[product] = orders
+            order_depth: OrderDepth = order_depths[product]
+            orders = self.market_making(product, order_depth)
+            # orders += self.long_short_position(product, order_depth)
+            result[product] = orders
 
         return result

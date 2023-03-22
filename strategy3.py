@@ -6,6 +6,7 @@ SINGLE_TRADE_SIZE = 5
 LIMITS = {'PEARLS': 20, 'BANANAS': 20}
 PRICES = {'PEARLS': 10000, 'BANANAS': 5000}
 
+"""33,352,562"""
 class Trader:
     def __init__(self):
         self.profit = 0
