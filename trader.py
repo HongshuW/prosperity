@@ -36,6 +36,7 @@ class Trader:
             orders.append(Order(product, best_ask - 1, -volume))
             # print("BUY", volume, "x", best_bid + 1)
             # print("SELL", volume, "x", best_ask - 1)
+            print("-----market making: ", product, "-----")
         return orders
 
     def long_short_position(self, product: str, order_depth: OrderDepth) -> list[Order]:
@@ -49,6 +50,7 @@ class Trader:
             if best_ask < PRICES[product]:
                 volume = min(best_ask_volume, SINGLE_TRADE_SIZE)
                 orders.append(Order(product, best_ask, volume))
+                print("-----buy: ", product, "-----")
                 # print("BUY", volume, "x", best_ask)
 
         best_bid = self.get_best_bid(order_depth)
@@ -59,6 +61,7 @@ class Trader:
             if best_bid > PRICES[product]:
                 volume = min(best_bid_volume, SINGLE_TRADE_SIZE)
                 orders.append(Order(product, best_bid, -volume))
+                print("-----sell: ", product, "-----")
                 # print("SELL", volume, "x", best_bid)
 
         return orders
