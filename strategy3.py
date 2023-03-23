@@ -3,10 +3,9 @@ from datamodel import OrderDepth, TradingState, Order
 
 
 SINGLE_TRADE_SIZE = 5
-LIMITS = {'PEARLS': 20, 'BANANAS': 20}
-PRICES = {'PEARLS': 10000, 'BANANAS': 5000}
+LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300}
+PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
 
-"""33,352,562"""
 class Trader:
     def __init__(self):
         self.profit = 0
@@ -67,36 +66,6 @@ class Trader:
 
         return orders
 
-    def print_pol(self, own_trades, position, order_depths) -> None:
-        if len(own_trades.keys()) == 0:
-            print("\nprofit or loss: ", self.profit)
-            return
-
-        for product in own_trades.keys():
-            trades = own_trades[product]
-            for trade in trades:
-                pol = trade.price * trade.quantity
-                if trade.buyer == 'SUBMISSION':
-                    # spent money
-                    self.profit -= pol
-                elif trade.seller == 'SUBMISSION':
-                    # gained money
-                    self.profit += pol
-
-        for product in position.keys():
-            pos = position[product]
-            order_depth = order_depths[product]
-            if pos > 0:
-                # need to sell
-                price = self.get_best_bid(order_depth)
-                self.profit += price * pos
-            elif pos < 0:
-                # need to buy
-                price = self.get_best_ask(order_depth)
-                self.profit -= price * pos
-
-        print("\nprofit or loss: ", self.profit)
-
     def run(self, state: TradingState) -> Dict[str, List[Order]]:
         """
         Only method required. It takes all buy and sell orders for all symbols as an input,
@@ -107,9 +76,6 @@ class Trader:
         position = state.position
         own_trades = state.own_trades
         order_depths = state.order_depths
-
-        self.print_pol(own_trades, position, order_depths)
-        print("\nposition: ", position)
 
         for product in order_depths.keys():
             if position.keys().__contains__(product):
