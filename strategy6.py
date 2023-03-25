@@ -145,7 +145,6 @@ class Trader:
         and outputs a list of orders to be sent
         """
         result = {}
-        status = {COCONUTS: False, PINA_COLADAS: False}
 
         position = state.position
         order_depths = state.order_depths
@@ -153,24 +152,18 @@ class Trader:
         # for each product, try market making and long short position
         for product in order_depths.keys():
             order_depth: OrderDepth = order_depths[product]
-            orders = self.long_short_position(product, order_depth, position)
+            orders = self.market_making(product, order_depth, position)
             if len(orders) == 0:
-                orders = self.market_making(product, order_depth, position)
-            if len(orders) > 0:
-                if product == COCONUTS:
-                    status[product] = True
-                elif product == PINA_COLADAS:
-                    status[product] = True
+                orders = self.long_short_position(product, order_depth, position)
             result[product] = orders
 
         # for related products, try pair trading
-        if not status[COCONUTS] and not status[PINA_COLADAS]:
-            factor = PRICES[PINA_COLADAS] / PRICES[COCONUTS]
-            subset_of_results = self.pair_trading(COCONUTS, PINA_COLADAS, order_depths, factor, position)
-            for product in subset_of_results.keys():
-                if result.__contains__(product):
-                    result[product] += subset_of_results[product]
-                else:
-                    result[product] = subset_of_results[product]
+        factor = PRICES[PINA_COLADAS] / PRICES[COCONUTS]
+        subset_of_results = self.pair_trading(COCONUTS, PINA_COLADAS, order_depths, factor, position)
+        for product in subset_of_results.keys():
+            if result.__contains__(product):
+                result[product] += subset_of_results[product]
+            else:
+                result[product] = subset_of_results[product]
 
         return result
