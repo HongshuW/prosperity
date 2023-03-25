@@ -1,11 +1,15 @@
 from typing import Dict, List
 from datamodel import OrderDepth, TradingState, Order
 
+PEARLS = 'PEARLS'
+BANANAS = 'BANANAS'
 COCONUTS = 'COCONUTS'
 PINA_COLADAS = 'PINA_COLADAS'
+DIVING_GEAR = 'DIVING_GEAR'
+BERRIES = 'BERRIES'
 
 SINGLE_TRADE_SIZE = 5
-LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300}
+LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300, 'DIVING_GEAR': 50, 'BERRIES': 250}
 PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
 
 class Trader:
@@ -76,8 +80,8 @@ class Trader:
                 volume = min(order_depth.sell_orders[best_ask], self.get_volume(product, True, position))
             else:
                 volume = SINGLE_TRADE_SIZE
-            if best_ask + 1 < PRICES[product]:
-                buy_order = self.buy_product(product, best_ask + 1, volume)
+            if best_ask < PRICES[product]:
+                buy_order = self.buy_product(product, best_ask, volume)
                 orders.append(buy_order)
                 print("-----buy: ", product, "-----")
 
@@ -89,8 +93,8 @@ class Trader:
                 volume = min(order_depth.buy_orders[best_bid], self.get_volume(product, False, position))
             else:
                 volume = SINGLE_TRADE_SIZE
-            if best_bid - 1 > PRICES[product]:
-                sell_order = self.sell_product(product, best_bid - 1, volume)
+            if best_bid > PRICES[product]:
+                sell_order = self.sell_product(product, best_bid, volume)
                 orders.append(sell_order)
                 print("-----sell: ", product, "-----")
 
@@ -145,32 +149,33 @@ class Trader:
         and outputs a list of orders to be sent
         """
         result = {}
-        status = {COCONUTS: False, PINA_COLADAS: False}
 
         position = state.position
         order_depths = state.order_depths
 
-        # for each product, try market making and long short position
-        for product in order_depths.keys():
-            order_depth: OrderDepth = order_depths[product]
-            orders = self.long_short_position(product, order_depth, position)
-            if len(orders) == 0:
-                orders = self.market_making(product, order_depth, position)
-            if len(orders) > 0:
-                if product == COCONUTS:
-                    status[product] = True
-                elif product == PINA_COLADAS:
-                    status[product] = True
-            result[product] = orders
+        # pearls: market making and long short positioning
+        pearls_order_depth = order_depths[PEARLS]
+        pearl_orders = self.market_making(PEARLS, pearls_order_depth, position)
+        pearl_orders += self.long_short_position(PEARLS, pearls_order_depth, position)
+        result[PEARLS] = pearl_orders
 
-        # for related products, try pair trading
-        if not status[COCONUTS] and not status[PINA_COLADAS]:
-            factor = PRICES[PINA_COLADAS] / PRICES[COCONUTS]
-            subset_of_results = self.pair_trading(COCONUTS, PINA_COLADAS, order_depths, factor, position)
-            for product in subset_of_results.keys():
-                if result.__contains__(product):
-                    result[product] += subset_of_results[product]
-                else:
-                    result[product] = subset_of_results[product]
+        # bananas: market making
+        bananas_order_depth = order_depths[BANANAS]
+        bananas_orders = self.market_making(BANANAS, bananas_order_depth, position)
+        result[BANANAS] = bananas_orders
+
+        # coconuts and pina coladas: pair trading
+        factor = PRICES[PINA_COLADAS] / PRICES[COCONUTS]
+        subset_of_results = self.pair_trading(COCONUTS, PINA_COLADAS, order_depths, factor, position)
+        for product in subset_of_results.keys():
+            if result.__contains__(product):
+                result[product] += subset_of_results[product]
+            else:
+                result[product] = subset_of_results[product]
+
+        # berries: market making
+        berries_order_depth = order_depths[BERRIES]
+        berries_orders = self.market_making(BERRIES, berries_order_depth, position)
+        result[BERRIES] = berries_orders
 
         return result
