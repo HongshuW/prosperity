@@ -5,8 +5,8 @@ COCONUTS = 'COCONUTS'
 PINA_COLADAS = 'PINA_COLADAS'
 
 SINGLE_TRADE_SIZE = 5
-LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300}
-PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
+LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300, 'DIVING_GEAR': 50, 'BERRIES': 250}
+# PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
 
 class Trader:
     def __init__(self):
@@ -65,36 +65,36 @@ class Trader:
                 print("-----market making: ", product, "-----")
         return orders
 
-    def long_short_position(self, product: str, order_depth: OrderDepth, position) -> list[Order]:
-        orders: list[Order] = []
-
-        best_ask = self.get_best_ask(order_depth)
-        if best_ask == -1:
-            return orders
-        else:
-            if position.keys().__contains__(product):
-                volume = min(order_depth.sell_orders[best_ask], self.get_volume(product, True, position))
-            else:
-                volume = SINGLE_TRADE_SIZE
-            if best_ask + 1 < PRICES[product]:
-                buy_order = self.buy_product(product, best_ask + 1, volume)
-                orders.append(buy_order)
-                print("-----buy: ", product, "-----")
-
-        best_bid = self.get_best_bid(order_depth)
-        if best_bid == -1:
-            return orders
-        else:
-            if position.keys().__contains__(product):
-                volume = min(order_depth.buy_orders[best_bid], self.get_volume(product, False, position))
-            else:
-                volume = SINGLE_TRADE_SIZE
-            if best_bid - 1 > PRICES[product]:
-                sell_order = self.sell_product(product, best_bid - 1, volume)
-                orders.append(sell_order)
-                print("-----sell: ", product, "-----")
-
-        return orders
+    # def long_short_position(self, product: str, order_depth: OrderDepth, position) -> list[Order]:
+    #     orders: list[Order] = []
+    #
+    #     best_ask = self.get_best_ask(order_depth)
+    #     if best_ask == -1:
+    #         return orders
+    #     else:
+    #         if position.keys().__contains__(product):
+    #             volume = min(order_depth.sell_orders[best_ask], self.get_volume(product, True, position))
+    #         else:
+    #             volume = SINGLE_TRADE_SIZE
+    #         if best_ask + 1 < PRICES[product]:
+    #             buy_order = self.buy_product(product, best_ask + 1, volume)
+    #             orders.append(buy_order)
+    #             print("-----buy: ", product, "-----")
+    #
+    #     best_bid = self.get_best_bid(order_depth)
+    #     if best_bid == -1:
+    #         return orders
+    #     else:
+    #         if position.keys().__contains__(product):
+    #             volume = min(order_depth.buy_orders[best_bid], self.get_volume(product, False, position))
+    #         else:
+    #             volume = SINGLE_TRADE_SIZE
+    #         if best_bid - 1 > PRICES[product]:
+    #             sell_order = self.sell_product(product, best_bid - 1, volume)
+    #             orders.append(sell_order)
+    #             print("-----sell: ", product, "-----")
+    #
+    #     return orders
 
     """product price * factor = hedge product price"""
     def pair_trading(self, product: str, hedge_product: str, order_depths, factor: float, position) -> Dict[str, List[Order]]:
@@ -153,9 +153,7 @@ class Trader:
         # for each product, try market making and long short position
         for product in order_depths.keys():
             order_depth: OrderDepth = order_depths[product]
-            orders = self.long_short_position(product, order_depth, position)
-            if len(orders) == 0:
-                orders = self.market_making(product, order_depth, position)
+            orders = self.market_making(product, order_depth, position)
             if len(orders) > 0:
                 if product == COCONUTS:
                     status[product] = True
@@ -165,7 +163,7 @@ class Trader:
 
         # for related products, try pair trading
         if not status[COCONUTS] and not status[PINA_COLADAS]:
-            factor = PRICES[PINA_COLADAS] / PRICES[COCONUTS]
+            factor = 15000 / 8000
             subset_of_results = self.pair_trading(COCONUTS, PINA_COLADAS, order_depths, factor, position)
             for product in subset_of_results.keys():
                 if result.__contains__(product):
