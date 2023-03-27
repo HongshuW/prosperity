@@ -8,9 +8,25 @@ PINA_COLADAS = 'PINA_COLADAS'
 DOLPHIN_SIGHTINGS = 'DOLPHIN_SIGHTINGS'
 DIVING_GEAR = 'DIVING_GEAR'
 BERRIES = 'BERRIES'
+BAGUETTE = 'BAGUETTE'
+DIP = 'DIP'
+UKULELE = 'UKULELE'
+PICNIC_BASKET = 'PICNIC_BASKET'
 
 SINGLE_TRADE_SIZE = 5
-LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300, 'DIVING_GEAR': 50, 'BERRIES': 250}
+LIMITS = {
+    'PEARLS': 20,
+    'BANANAS': 20,
+    'COCONUTS': 600,
+    'PINA_COLADAS': 300,
+    'DIVING_GEAR': 50,
+    'BERRIES': 250,
+    'BAGUETTE': 150,
+    'DIP': 300,
+    'UKULELE': 70,
+    'PICNIC_BASKET': 70
+}
+
 PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
 PREVIOUS_OBSERVATIONS = {}
 
@@ -156,18 +172,12 @@ class Trader:
                 # increased
                 if base_observation > previous_observation:
                     best_ask = self.get_best_ask(product_order_depth)
-                    if position.keys().__contains__(product):
-                        volume = self.get_volume(product, True, position)
-                    else:
-                        volume = SINGLE_TRADE_SIZE
+                    volume = SINGLE_TRADE_SIZE
                     orders.append(self.buy_product(product, best_ask, volume))
                 # decreased
                 elif base_observation < previous_observation:
                     best_bid = self.get_best_bid(product_order_depth)
-                    if position.keys().__contains__(product):
-                        volume = self.get_volume(product, False, position)
-                    else:
-                        volume = SINGLE_TRADE_SIZE
+                    volume = SINGLE_TRADE_SIZE
                     orders.append(self.sell_product(product, best_bid, volume))
                 return orders
         else:
@@ -205,7 +215,7 @@ class Trader:
             else:
                 result[product] = subset_of_results[product]
 
-        # dolphin sightings and diving gear
+        # dolphin sightings and diving gear: trending
         diving_gear_order_depth = order_depths[DIVING_GEAR]
         dolphin_observation = observations[DOLPHIN_SIGHTINGS]
         diving_gear_orders = \
