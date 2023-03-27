@@ -8,9 +8,25 @@ PINA_COLADAS = 'PINA_COLADAS'
 DOLPHIN_SIGHTINGS = 'DOLPHIN_SIGHTINGS'
 DIVING_GEAR = 'DIVING_GEAR'
 BERRIES = 'BERRIES'
+BAGUETTE = 'BAGUETTE'
+DIP = 'DIP'
+UKULELE = 'UKULELE'
+PICNIC_BASKET = 'PICNIC_BASKET'
 
 SINGLE_TRADE_SIZE = 5
-LIMITS = {'PEARLS': 20, 'BANANAS': 20, 'COCONUTS': 600, 'PINA_COLADAS': 300, 'DIVING_GEAR': 50, 'BERRIES': 250}
+LIMITS = {
+    'PEARLS': 20,
+    'BANANAS': 20,
+    'COCONUTS': 600,
+    'PINA_COLADAS': 300,
+    'DIVING_GEAR': 50,
+    'BERRIES': 250,
+    'BAGUETTE': 150,
+    'DIP': 300,
+    'UKULELE': 70,
+    'PICNIC_BASKET': 70
+}
+
 PRICES = {'PEARLS': 10000, 'BANANAS': 5000, 'COCONUTS': 8000, 'PINA_COLADAS': 15000}
 PREVIOUS_OBSERVATIONS = {}
 
@@ -117,10 +133,13 @@ class Trader:
         hedge_best_bid = self.get_best_bid(hedge_product_order_depth)
 
         if product_best_ask * factor < hedge_best_bid:
-            if position.keys().__contains__(product):
-                volume = min(product_order_depth.sell_orders[product_best_ask], self.get_volume(product, True, position))
-            elif position.keys().__contains__(hedge_product):
-                volume = min(hedge_product_order_depth.buy_orders[hedge_best_bid], self.get_volume(hedge_product, False, position))
+            if position.keys().__contains__(product) and position.keys().__contains__(hedge_product):
+                volume = min(
+                    product_order_depth.sell_orders[product_best_ask],
+                    self.get_volume(product, True, position),
+                    hedge_product_order_depth.buy_orders[hedge_best_bid],
+                    self.get_volume(hedge_product, False, position)
+                )
             else:
                 volume = SINGLE_TRADE_SIZE
             # buy product and sell hedge product
@@ -129,10 +148,13 @@ class Trader:
             product_orders.append(buy_product)
             hedge_orders.append(sell_hedge_product)
         elif hedge_best_ask < product_best_bid * factor:
-            if position.keys().__contains__(product):
-                volume = min(product_order_depth.buy_orders[product_best_bid], self.get_volume(product, False, position))
-            elif position.keys().__contains__(hedge_product):
-                volume = min(hedge_product_order_depth.sell_orders[hedge_best_ask], self.get_volume(hedge_product, True, position))
+            if position.keys().__contains__(product) and position.keys().__contains__(hedge_product):
+                volume = min(
+                    product_order_depth.buy_orders[product_best_bid],
+                    self.get_volume(product, False, position),
+                    hedge_product_order_depth.sell_orders[hedge_best_ask],
+                    self.get_volume(hedge_product, True, position)
+                )
             else:
                 volume = SINGLE_TRADE_SIZE
             # sell product and buy hedge product
@@ -156,18 +178,12 @@ class Trader:
                 # increased
                 if base_observation > previous_observation:
                     best_ask = self.get_best_ask(product_order_depth)
-                    if position.keys().__contains__(product):
-                        volume = self.get_volume(product, True, position)
-                    else:
-                        volume = SINGLE_TRADE_SIZE
+                    volume = SINGLE_TRADE_SIZE
                     orders.append(self.buy_product(product, best_ask, volume))
                 # decreased
                 elif base_observation < previous_observation:
                     best_bid = self.get_best_bid(product_order_depth)
-                    if position.keys().__contains__(product):
-                        volume = self.get_volume(product, False, position)
-                    else:
-                        volume = SINGLE_TRADE_SIZE
+                    volume = SINGLE_TRADE_SIZE
                     orders.append(self.sell_product(product, best_bid, volume))
                 return orders
         else:
@@ -205,7 +221,7 @@ class Trader:
             else:
                 result[product] = subset_of_results[product]
 
-        # dolphin sightings and diving gear
+        # dolphin sightings and diving gear: trending
         diving_gear_order_depth = order_depths[DIVING_GEAR]
         dolphin_observation = observations[DOLPHIN_SIGHTINGS]
         diving_gear_orders = \
@@ -216,5 +232,48 @@ class Trader:
         berries_order_depth = order_depths[BERRIES]
         berries_orders = self.market_making(BERRIES, berries_order_depth, position)
         result[BERRIES] = berries_orders
+
+
+        # picnic basket
+        picnic_order_depth = order_depths[PICNIC_BASKET]
+        baguette_order_depth = order_depths[BAGUETTE]
+        dip_order_depth = order_depths[DIP]
+        ukulele_order_depth = order_depths[UKULELE]
+        # get prices
+        picnic_best_ask = self.get_best_ask(picnic_order_depth)
+        picnic_best_bid = self.get_best_bid(picnic_order_depth)
+        baguette_best_ask = self.get_best_ask(baguette_order_depth)
+        baguette_best_bid = self.get_best_bid(baguette_order_depth)
+        dip_best_ask = self.get_best_ask(dip_order_depth)
+        dip_best_bid = self.get_best_bid(dip_order_depth)
+        ukulele_best_ask = self.get_best_ask(ukulele_order_depth)
+        ukulele_best_bid = self.get_best_bid(ukulele_order_depth)
+        # calculate combined prices
+        combine_best_ask = 2 * baguette_best_ask + 4 * dip_best_ask + ukulele_best_ask
+        combine_best_bid = 2 * baguette_best_bid + 4 * dip_best_bid + ukulele_best_bid
+        picnic_orders = []
+        baguette_orders = []
+        dip_orders = []
+        ukulele_orders = []
+        # buy individual items, sell set
+        if combine_best_ask < picnic_best_bid:
+            if abs(baguette_order_depth.sell_orders[baguette_best_ask]) >= 2 and \
+                    abs(dip_order_depth.sell_orders[dip_best_ask]) >= 4:
+                picnic_orders.append(self.sell_product(PICNIC_BASKET, picnic_best_bid, 1))
+                baguette_orders.append(self.buy_product(BAGUETTE, baguette_best_ask, 2))
+                dip_orders.append(self.buy_product(DIP, dip_best_ask, 4))
+                ukulele_orders.append(self.buy_product(UKULELE, ukulele_best_ask, 1))
+        # buy picnic set, sell individual items
+        elif combine_best_bid > picnic_best_ask:
+            if abs(baguette_order_depth.buy_orders[baguette_best_bid]) >= 2 and \
+                    abs(dip_order_depth.buy_orders[dip_best_bid]) >= 4:
+                picnic_orders.append(self.buy_product(PICNIC_BASKET, picnic_best_ask, 1))
+                baguette_orders.append(self.sell_product(BAGUETTE, baguette_best_bid, 2))
+                dip_orders.append(self.sell_product(DIP, dip_best_bid, 4))
+                ukulele_orders.append(self.sell_product(UKULELE, ukulele_best_bid, 1))
+        result[PICNIC_BASKET] = picnic_orders
+        result[BAGUETTE] = baguette_orders
+        result[DIP] = dip_orders
+        result[UKULELE] = ukulele_orders
 
         return result
