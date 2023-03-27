@@ -133,10 +133,13 @@ class Trader:
         hedge_best_bid = self.get_best_bid(hedge_product_order_depth)
 
         if product_best_ask * factor < hedge_best_bid:
-            if position.keys().__contains__(product):
-                volume = min(product_order_depth.sell_orders[product_best_ask], self.get_volume(product, True, position))
-            elif position.keys().__contains__(hedge_product):
-                volume = min(hedge_product_order_depth.buy_orders[hedge_best_bid], self.get_volume(hedge_product, False, position))
+            if position.keys().__contains__(product) and position.keys().__contains__(hedge_product):
+                volume = min(
+                    product_order_depth.sell_orders[product_best_ask],
+                    self.get_volume(product, True, position),
+                    hedge_product_order_depth.buy_orders[hedge_best_bid],
+                    self.get_volume(hedge_product, False, position)
+                )
             else:
                 volume = SINGLE_TRADE_SIZE
             # buy product and sell hedge product
@@ -145,10 +148,13 @@ class Trader:
             product_orders.append(buy_product)
             hedge_orders.append(sell_hedge_product)
         elif hedge_best_ask < product_best_bid * factor:
-            if position.keys().__contains__(product):
-                volume = min(product_order_depth.buy_orders[product_best_bid], self.get_volume(product, False, position))
-            elif position.keys().__contains__(hedge_product):
-                volume = min(hedge_product_order_depth.sell_orders[hedge_best_ask], self.get_volume(hedge_product, True, position))
+            if position.keys().__contains__(product) and position.keys().__contains__(hedge_product):
+                volume = min(
+                    product_order_depth.buy_orders[product_best_bid],
+                    self.get_volume(product, False, position),
+                    hedge_product_order_depth.sell_orders[hedge_best_ask],
+                    self.get_volume(hedge_product, True, position)
+                )
             else:
                 volume = SINGLE_TRADE_SIZE
             # sell product and buy hedge product
